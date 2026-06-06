@@ -8,22 +8,30 @@ jobs:
       - name: Kodları Çek
         uses: actions/checkout@v4
 
-      - name: Bağımlılıkları Kur
+      - name: Gerekli Linux Paketlerini Kur
         run: |
           sudo apt-get update
-          sudo apt-get install -y libxml2-dev libssl-dev
+          sudo apt-get install -y clang lld libxml2-dev libssl-dev make git curl perl
 
-      - name: Theos ve SDK Kur
-        uses: theos/setup-theos@v1
-        with:
-          archs: arm64 arm64e
+      - name: Theos Kurulumu
+        run: |
+          git clone --recursive https://github.com/theos/theos.git /opt/theos
+          # Küçük harfli makefile varsa Theos'un görmesi için düzeltiyoruz
+          if [ -f makefile ] && [ ! -f Makefile ]; then cp makefile Makefile; fi
+
+      - name: iOS SDK İndir ve Kur
+        run: |
+          git clone https://github.com/theos/sdks.git /opt/theos/sdks
+          # En kararlı iOS 14.5 SDK'sını kullanıma hazır hale getiriyoruz
+          curl -LO https://github.com/theos/sdks/raw/master/iPhoneOS14.5.sdk.tar.xz
+          tar -xf iPhoneOS14.5.sdk.tar.xz -C /opt/theos/sdks/
+          rm iPhoneOS14.5.sdk.tar.xz
 
       - name: Tweak'i Paketle
         run: |
-          # Küçük harfli makefile'ı Theos'un tanıması için kopyalıyoruz
-          if [ -f makefile ] && [ ! -f Makefile ]; then cp makefile Makefile; fi
-          make package FINALPACKAGE=1 THEOS=/opt/theos
-          
+          export THEOS=/opt/theos
+          make package FINALPACKAGE=1
+
       - name: Hazır DEB Dosyasını Teslim Et
         uses: actions/upload-artifact@v4
         with:
