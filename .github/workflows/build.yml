@@ -1,0 +1,25 @@
+```yaml
+name: Tweak Derleyici
+on: [push, workflow_dispatch]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Kodları Çek
+        uses: actions/checkout@v4
+
+      - name: Theos ve SDK Kur
+        uses: theos/setup-theos@v1
+        with:
+          archs: arm64 arm64e
+
+      - name: Tweak'i Paketle
+        run: |
+          make package FINALPACKAGE=1
+          
+      - name: Hazır DEB Dosyasını Teslim Et
+        uses: actions/upload-artifact@v4
+        with:
+          name: brazilix-tweak-paketi
+          path: packages/*.deb
