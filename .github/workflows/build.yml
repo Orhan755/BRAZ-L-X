@@ -1,4 +1,3 @@
-```yaml
 name: Tweak Derleyici
 on: [push, workflow_dispatch]
 
@@ -9,6 +8,11 @@ jobs:
       - name: Kodları Çek
         uses: actions/checkout@v4
 
+      - name: Bağımlılıkları Kur
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libxml2-dev libssl-dev
+
       - name: Theos ve SDK Kur
         uses: theos/setup-theos@v1
         with:
@@ -16,7 +20,9 @@ jobs:
 
       - name: Tweak'i Paketle
         run: |
-          make package FINALPACKAGE=1
+          # Küçük harfli makefile'ı Theos'un tanıması için kopyalıyoruz
+          if [ -f makefile ] && [ ! -f Makefile ]; then cp makefile Makefile; fi
+          make package FINALPACKAGE=1 THEOS=/opt/theos
           
       - name: Hazır DEB Dosyasını Teslim Et
         uses: actions/upload-artifact@v4
